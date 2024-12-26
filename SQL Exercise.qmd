@@ -1,0 +1,65 @@
+---
+title: "SQL Exercise"
+format: html
+editor: visual
+---
+
+```{r,include = FALSE}
+library(DBI)
+library(RSQLite)
+```
+
+```{r,include = FALSE}
+con_chocolate <- DBI::dbConnect(drv = RSQLite::SQLite(),
+                                 dbname = "chocolate.sqlite")
+DBI::dbListTables(con_chocolate)
+```
+
+## Q1
+
+1.  the query meaning is - create for me a table with two columns the first is a list of the sales rep’s full name, and the second is of the sum of the orders this rep did,the column will be named total_candy_bars_sold. filter those column so it will show me only rep and sum orders from 2022 and so it will show me only sales rep that joined the company at 2010. the sum function mentcend before sum by groups of salers name.
+
+    the info will come from two tables : salesreps and orders, combined in an inner join were the column srid indicate to them what column to use to combie them.
+
+2.  
+
+```{sql, connection = con_chocolate, output.var = "q1"}
+SELECT salesreps.Name, SUM(orders.amount) AS total_candy_bars_sold
+FROM salesreps INNER JOIN orders USING (srid)
+WHERE
+orders.sale_date BETWEEN '2022-01-01' AND '2022-12-31'
+AND salesreps.year_joined = 2010
+GROUP BY salesreps.Name;
+```
+
+## Q2
+
+```{sql, connection = con_chocolate, output.var = "q2"}
+SELECT SUM(orders.amount) AS total_orders, count(orders.cid) AS N
+FROM orders
+GROUP BY cid;
+```
+
+## Q3
+
+the candybar with the most orders at the firstquarter of 2022 is **Cocount Crave** and **Hess, Christope**r sold the most of it in the second quarter of 2022
+
+```{sql, connection = con_chocolate, output.var = "q3"}
+WITH top_product AS (
+  SELECT pid, SUM(amount) AS total_amount
+  FROM orders
+  WHERE sale_date BETWEEN '2022-01-01' AND '2022-03-31'
+  GROUP BY pid
+  ORDER BY total_amount DESC
+  LIMIT 1
+)
+SELECT pid,candy_names, srid, salesreps.Name, SUM(amount) AS total_sales
+FROM orders
+INNER JOIN products USING (pid)
+INNER JOIN salesreps USING (srid)
+WHERE sale_date BETWEEN '2022-04-01' AND '2022-06-30'
+  AND pid IN (SELECT pid FROM top_product)
+GROUP BY srid, salesreps.Name
+ORDER BY total_sales DESC
+LIMIT 1;
+```
