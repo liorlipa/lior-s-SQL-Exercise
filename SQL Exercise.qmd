@@ -23,7 +23,7 @@ DBI::dbListTables(con_chocolate)
 
 2.  
 
-```{sql connection=con_chocolate, output.var="q1"}
+```{sql connection = con_chocolate, output.var="q1"}
 SELECT salesreps.Name, SUM(orders.amount) AS total_candy_bars_sold
 FROM salesreps INNER JOIN orders USING (srid)
 WHERE
@@ -64,6 +64,6 @@ INNER JOIN products USING (pid)
 INNER JOIN salesreps USING (srid)
 WHERE sale_date BETWEEN '2022-04-01' AND '2022-06-30'
   AND pid IN (SELECT pid FROM top_product)
-GROUP BY srid, salesreps.Name, pid, candy_names
+GROUP BY srid, salesreps.Name
 ORDER BY total_sales DESC;
 ```
